@@ -1,79 +1,187 @@
--- RYNTRAX HUB - SCRIPT CLOSED (HACKER STYLE)
+--// SYNTRAX HUB LOADER + DOWN SYSTEM
 
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local player = Players.LocalPlayer
-local PlayerGui = player:WaitForChild("PlayerGui")
+local _ENV = (getgenv or getrenv or getfenv)()
+local BETA_VERSION = BETA_VERSION or _ENV.BETA_VERSION
 
--- ScreenGui
-local gui = Instance.new("ScreenGui")
-gui.Name = "RYNTRAX_CloseGui"
-gui.ResetOnSpawn = false
-gui.Parent = PlayerGui
+-- 🔴 BẬT/TẮT DOWN HUB
+local SYNTRAX_DOWN = true -- đổi thành false để chạy script
 
--- Black background
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(1, 0, 1, 0)
-frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-frame.BackgroundTransparency = 0.05
-frame.Parent = gui
+-- 📝 Nội dung thông báo DOWN
+local SYNTRAX_DOWN_TEXT = [[
+⚠️ SYNTRAX Hub Dungeon IS UNDER MAINTENANCE ⚠️
 
--- Hacker text
-local text = Instance.new("TextLabel")
-text.Size = UDim2.new(1, 0, 0.25, 0)
-text.Position = UDim2.new(0, 0, 0.32, 0)
-text.BackgroundTransparency = 1
-text.Text = "RYNTRAX HUB\n[SCRIPT CLOSED]"
-text.TextColor3 = Color3.fromRGB(255, 0, 0)
-text.TextScaled = true
-text.Font = Enum.Font.Code
-text.Parent = frame
+• Hub is updating or fixing bugs.
+• Please try again later!
+• Discord: SYNTRAX Hub
+• https://discord.gg/WF2sPbv3GD
+• Status: Updating...
 
--- Neon stroke
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(255, 0, 0)
-stroke.Thickness = 2
-stroke.Parent = text
+]]
 
--- Glow gradient
-local glow = Instance.new("UIGradient")
-glow.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(255,80,80))
-}
-glow.Parent = text
-
--- OK / EXIT button
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 220, 0, 55)
-button.Position = UDim2.new(0.5, -110, 0.62, 0)
-button.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
-button.Text = "OK / EXIT"
-button.TextColor3 = Color3.fromRGB(255, 0, 0)
-button.Font = Enum.Font.Code
-button.TextScaled = true
-button.Parent = frame
-
-local btnStroke = Instance.new("UIStroke")
-btnStroke.Color = Color3.fromRGB(255, 0, 0)
-btnStroke.Thickness = 2
-btnStroke.Parent = button
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 8)
-corner.Parent = button
-
--- Hacker blink effect
-spawn(function()
-	while gui.Parent do
-		wait(0.8)
-		text.TextTransparency = 0.4
-		wait(0.1)
-		text.TextTransparency = 0
+--========================
+-- DOWN SYSTEM
+--========================
+do
+	if _ENV.syntrax_down_message then
+		_ENV.syntrax_down_message:Destroy()
 	end
-end)
 
--- Click to close UI
-button.MouseButton1Click:Connect(function()
-	gui:Destroy()
-end)
+	local function CreateDownMessage(Text)
+		_ENV.loadedFarm = nil
+		_ENV.OnFarm = false
+
+		local Message = Instance.new("Message", workspace)
+		Message.Text = Text
+		_ENV.syntrax_down_message = Message
+
+		error(Text, 2)
+	end
+
+	if SYNTRAX_DOWN then
+		CreateDownMessage(SYNTRAX_DOWN_TEXT)
+	end
+end
+
+--========================
+-- SCRIPT LIST
+--========================
+local Scripts = {
+	{
+		GameId = 994732206,
+		UrlPath = if BETA_VERSION then "BLOX-FRUITS-BETA.lua" else "BloxFruits.luau"
+	},
+	{
+		PlacesIds = {10260193230},
+		UrlPath = "MemeSea.luau"
+	}
+}
+
+local fetcher, urls = {}, {}
+
+--========================
+-- EXECUTE DEBOUNCE
+--========================
+do
+	local last_exec = _ENV.rz_execute_debounce
+	
+	if last_exec and (tick() - last_exec) <= 5 then
+		return nil
+	end
+	
+	_ENV.rz_execute_debounce = tick()
+end
+
+--========================
+-- URL CONFIG
+--========================
+urls.Owner = "https://raw.githubusercontent.com/tlredz/";
+urls.Repository = urls.Owner .. "Scripts/refs/heads/main/";
+urls.Translator = urls.Repository .. "Translator/";
+urls.Utils = urls.Repository .. "Utils/";
+
+--========================
+-- TELEPORT QUEUE
+--========================
+do
+	local executor = syn or fluxus
+	local queueteleport = queue_on_teleport or (executor and executor.queue_on_teleport)
+	
+	if not _ENV.rz_added_teleport_queue and type(queueteleport) == "function" then
+		local ScriptSettings = {...}
+		local SettingsCode = ""
+		
+		_ENV.rz_added_teleport_queue = true
+		
+		local Success, EncodedSettings = pcall(function()
+			return game:GetService("HttpService"):JSONEncode(ScriptSettings)
+		end)
+		
+		if Success and EncodedSettings then
+			SettingsCode = "unpack(game:GetService('HttpService'):JSONDecode('" .. EncodedSettings .. "'))"
+		end
+		
+		local SourceCode = ("loadstring(game:HttpGet('%smain.luau'))(%s)"):format(urls.Repository, SettingsCode)
+		
+		if BETA_VERSION then
+			SourceCode = "getgenv().BETA_VERSION=true;" .. SourceCode
+		end
+		
+		pcall(queueteleport, SourceCode)
+	end
+end
+
+--========================
+-- ERROR SYSTEM (SYNTRAX STYLE)
+--========================
+do
+	if _ENV.rz_error_message then
+		_ENV.rz_error_message:Destroy()
+	end
+	
+	local identifyexecutor = identifyexecutor or (function() return "Unknown" end)
+	
+	local function CreateMessageError(Text)
+		_ENV.loadedFarm = nil
+		_ENV.OnFarm = false
+		
+		local Message = Instance.new("Message", workspace)
+		Message.Text = "[SYNTRAX HUB]\n" .. string.gsub(Text, urls.Owner, "")
+		_ENV.rz_error_message = Message
+		
+		error(Text, 2)
+	end
+	
+	local function formatUrl(Url)
+		for key, path in urls do
+			if Url:find("{" .. key .. "}") then
+				return Url:gsub("{" .. key .. "}", path)
+			end
+		end
+		
+		return Url
+	end
+	
+	function fetcher.get(Url)
+		local success, response = pcall(function()
+			return game:HttpGet(formatUrl(Url))
+		end)
+		
+		if success then
+			return response
+		else
+			CreateMessageError(`[SYNTRAX-1] [{ identifyexecutor() }] failed to get http/url/raw: { Url }\n>>{ response }<<`)
+		end
+	end
+	
+	function fetcher.load(Url: string, concat: string?)
+		local raw = fetcher.get(Url) .. (if concat then concat else "")
+		local runFunction, errorText = loadstring(raw)
+		
+		if type(runFunction) ~= "function" then
+			CreateMessageError(`[SYNTRAX-2] [{ identifyexecutor() }] syntax error: { Url }\n>>{ errorText }<<`)
+		else
+			return runFunction
+		end
+	end
+end
+
+--========================
+-- PLACE CHECK
+--========================
+local function IsPlace(Script)
+	if Script.PlacesIds and table.find(Script.PlacesIds, game.PlaceId) then
+		return true
+	elseif Script.GameId and Script.GameId == game.GameId then
+		return true
+	end
+	return false
+end
+
+--========================
+-- LOAD GAME SCRIPT
+--========================
+for _, Script in Scripts do
+	if IsPlace(Script) then
+		return fetcher.load("{Repository}Games/" .. Script.UrlPath)(fetcher, ...)
+	end
+end
